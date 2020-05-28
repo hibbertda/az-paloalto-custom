@@ -12,41 +12,19 @@
         "vnet": {
             "type": "object",
             "metadata": {
-                "description": "name and prefix information for target VNet"
-            },
-            "defaultValue": {
-                "name": "VNET-CORE-Management",
-                "ipv4prefix": "10.3.0.0/16",
-                "resourceGroup": "core-network"
+                "description": "Object - Configuration of existing VNet"
             }
         },
         "subnet": {
             "type": "array",
             "metadata": {
-                "description": "description"
-            },
-            "defaultValue": [
-                {
-                    "name": "website",
-                    "ipv4Prefix": "10.3.3.0/24",
-                    "primary": "false"
-                },
-                {
-                    "name": "demo",
-                    "ipv4Prefix": "10.3.2.0/24",
-                    "primary": "true"
-                },
-                {
-                    "name": "dos-bids",
-                    "ipv4Prefix": "10.3.4.0/24",
-                    "primary": "false"
-                }                                
-            ]
+                "description": "Array of subnets, used to create NIC attached to the VM."
+            }
         },
         "osConfig": {
             "type": "object",
             "metadata": {
-                "description": "description"
+                "description": "Guest OS configuration options"
             },
             "defaultValue": {
                 "adminUserName": "panadmin"
@@ -55,7 +33,7 @@
         "osConfigPassword": {
             "type": "securestring",
             "metadata": {
-                "description": "description"
+                "description": "Administrator account password"
             }
         }
     },

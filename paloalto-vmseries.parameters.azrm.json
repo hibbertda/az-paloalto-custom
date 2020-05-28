@@ -1,0 +1,43 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "panName": {
+            "value": "value"
+        },
+        "vnet": {
+            "value": {
+                "name": "VALUE",
+                "ipv4prefix": "VALUE",
+                "resourceGroup": "VALUE"
+            }
+        },
+        "subnet": {
+            "value": [
+                {
+                    "name": "VALUE",
+                    "ipv4Prefix": "VALUE",
+                    "primary": "[true/false]"
+                },
+                {
+                    "name": "VALUE",
+                    "ipv4Prefix": "VALUE",
+                    "primary": "[true/false]"
+                },
+                {
+                    "name": "VALUE",
+                    "ipv4Prefix": "VALUE",
+                    "primary": "[true/false]"
+                }                                
+            ]
+        },
+        "osConfig": {
+            "value": {
+                "adminUserName": "VALUE"
+            }
+        },
+        "osConfigPassword": {
+            "value": "VALUE"
+        }
+    }
+}
