@@ -1,0 +1,166 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "panName": {
+            "type": "string",
+            "metadata": {
+                "description": "name for PAN VM"
+            },
+            "defaultValue": "pan"
+        },
+        "vnet": {
+            "type": "object",
+            "metadata": {
+                "description": "name and prefix information for target VNet"
+            },
+            "defaultValue": {
+                "name": "VNET-CORE-Management",
+                "ipv4prefix": "10.3.0.0/16",
+                "resourceGroup": "core-network"
+            }
+        },
+        "subnet": {
+            "type": "array",
+            "metadata": {
+                "description": "description"
+            },
+            "defaultValue": [
+                {
+                    "name": "website",
+                    "ipv4Prefix": "10.3.3.0/24",
+                    "primary": "false"
+                },
+                {
+                    "name": "demo",
+                    "ipv4Prefix": "10.3.2.0/24",
+                    "primary": "true"
+                },
+                {
+                    "name": "dos-bids",
+                    "ipv4Prefix": "10.3.4.0/24",
+                    "primary": "false"
+                }                                
+            ]
+        },
+        "osConfig": {
+            "type": "object",
+            "metadata": {
+                "description": "description"
+            },
+            "defaultValue": {
+                "adminUserName": "panadmin"
+            }
+        },
+        "osConfigPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "description"
+            }
+        }
+    },
+    "variables": {
+        "PANName": "[concat(parameters('panName'), '-fW')]",
+        "vmOSSource": {
+            "imagePublisher": "paloaltonetworks",
+            "imageSku": "byol",
+            "imageOffer": "vmseries1"
+        },
+        "vnetID": "[resourceId(parameters('vnet').resourceGroup, 'Microsoft.Network/virtualNetworks', parameters('vnet').name)]"
+    },
+    "resources": [
+        {
+            "name": "[concat('pip-', parameters('panName'))]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2019-11-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "[concat('pip-', parameters('panName'))]"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[concat('pip-hbl', parameters('panName'))]"
+                }
+            }
+        },
+        {
+            "name": "[concat('NIC-', variables('PANName'), '-', parameters('subnet')[copyIndex()].name)]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2019-11-01",
+            "location": "[resourceGroup().location]",
+            "tags": {},
+            "dependsOn": [],
+            "copy": {
+                "name": "nicloop",
+                "count": "[length(parameters('subnet'))]"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "[concat('NIC', variables('PANName'), '-', copyIndex(), '-config')]",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[concat(variables('vnetID'),'/subnets/', parameters('subnet')[copyIndex()].name)]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "[concat('vm-', parameters('panName'))]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2019-07-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "nicloop"
+            ],
+            "tags": {},
+            "plan": {
+                "name": "[variables('vmOSSource').imageSku]",
+                "product": "[variables('vmOSSource').imageOffer]",
+                "publisher": "[variables('vmOSSource').imagePublisher]"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_D4"
+                },
+                "osProfile": {
+                    "computerName": "[concat('vm-', parameters('panName'))]",
+                    "adminUsername": "[parameters('osConfig').adminUsername]",
+                    "adminPassword": "[parameters('osConfigPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[variables('vmOSSource').imagePublisher]",
+                        "offer": "[variables('vmOSSource').imageOffer]",
+                        "sku": "[variables('vmOSSource').imageSku]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "[concat('vm-', parameters('panName'), '-OSDisk')]",
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "copy": [
+                        {
+                            "name": "networkInterfaces",
+                            "count": "[length(parameters('subnet'))]",
+                            "input": {
+                                "id": "[resourceId('Microsoft.Network/networkInterfaces', concat('NIC-', variables('PANName'), '-', parameters('subnet')[copyIndex('networkInterfaces')].name))]",
+                                "properties": {
+                                    "primary": "[if(equals(parameters('subnet')[copyIndex('networkInterfaces')].primary, 'true'), 'true', 'false')]"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}
