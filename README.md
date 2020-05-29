@@ -3,6 +3,47 @@
 This ARM template will deploy a single Palo Alto VMSeries network security applicance to Azure connected to an existing Virtual Network (VNet) and Subnets. 
 
 
+## Terms and Coniditions
+
+If you haven't deployed a PaloAlto virtual appliance in your Azure subscriptions before, you will need to accept the PaloAlto terms of service. The template deployment process cannot prompt to accept terms, and it will cause the deployment to fail.
+
+Use '**Get-AzMarketplaceTerms**' PowerShell cmdlet to check the current status. 
+
+```powershell
+    Get-AzMarketplaceTerms `
+        -Publisher paloaltonetworks `
+        -Product vmseries1 `
+        -Name byol
+
+    ###
+
+    Publisher         : paloaltonetworks
+    Product           : vmseries1
+    Plan              : byol
+                        Q6A
+    Accepted          : False
+
+```
+### Accept Terms
+
+The following command will accept the PaloAlto terms and conditions in the current subscription.
+
+```powershell
+    Get-AzMarketplaceTerms `
+        -Publisher paloaltonetworks `
+        -Product vmseries1 `
+        -Name byol `
+        | Set-AzMarketplaceTerms -Accept
+
+    ###
+
+    Publisher         : paloaltonetworks
+    Product           : vmseries1
+    Plan              : byol
+                        Q6A
+    Accepted          : True
+
+```
 
 ## Parameters
 
